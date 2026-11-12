@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniPrint</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231b3a35'/%3E%3Cpath d='M12 4.5l5 3v5l-5 3-5-3v-5z' fill='%233ec9b0'/%3E%3Cpath d='M9 15.5v4M12 16.5v3M15 15.5v4' stroke='%23e8923a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+<div id="app">
+<aside id="side">
+  <header id="brand">
+    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#1b3a35"/><path d="M12 4.5l5 3v5l-5 3-5-3v-5z" fill="#3ec9b0"/><path d="M9 15.5v4M12 16.5v3M15 15.5v4" stroke="#e8923a" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <h1>MiniPrint <small id="ver"></small></h1>
+    <button id="helpbtn" class="icon" title="How MiniPrint works, mouse and keyboard">?</button>
+  </header>
+  <div id="sections">
+
+  <details class="sec" data-sec="profile">
+    <summary><h2>Settings profile</h2><span class="sum" id="sum-profile"></span></summary>
+    <div class="body">
+      <div class="row"><select id="preset" style="flex:1" aria-label="Settings profile"></select><button id="preset_reset" class="icon" title="Reset: load the default settings">↺</button></div>
+      <div class="row"><button id="psaveas" class="grow" title="Save the current settings under a name (an existing name is updated)">Save as…</button><button id="pimport" class="grow" title="Load a .miniprint-profile.json file">Import…</button><button id="pexport" class="grow" title="Save the current settings to a .miniprint-profile.json file to share or keep">Export…</button><input id="pimportfile" type="file" accept=".json,application/json" hidden></div>
+      <div class="hint" id="pinfo">Your settings are remembered between starts.</div>
+    </div>
+  </details>
+
+  <details class="sec" data-sec="parts" open>
+    <summary><span class="num">1</span><h2>Parts</h2><span class="sum" id="sum-parts"></span></summary>
+    <div class="body">
+      <div class="row"><button id="import" class="primary grow">Import models…</button><button id="calib" data-tip="Adds a grid of small test pieces to the project, each floating on supports with a flat 90° underside and a 45° slope, supported with a different tip diameter (rows) and tip penetration (columns). Print it once to find the values that work best on your printer and filament.">Calibrate tips…</button></div>
+      <table id="parts" hidden><thead><tr><th>part</th><th>size mm</th><th>status</th><th>plate</th><th></th></tr></thead><tbody></tbody></table>
+      <div class="row"><button id="procall" class="wide" disabled>Orient + support all parts</button></div>
+      <div class="hint" id="batchhint">Every part gets its best orientation, then supports with the settings below, and a place on a build plate. Parts marked <span style="color:var(--blue)">● ready</span> can be opened and worked on while the others are still being done.</div>
+      <div class="info" id="modelinfo"></div>
+    </div>
+  </details>
+
+  <details class="sec" data-sec="orient" open>
+    <summary><span class="num">2</span><h2>Orientation</h2><span class="sum" id="sum-orient"></span></summary>
+    <div class="body">
+    <div class="row" data-tip="How much the search avoids putting detailed surfaces (faces, hands, fine sculpting) where they would get support scars or visible layer steps. <b>100 %</b> is balanced; higher protects detail at the cost of more supports or a taller print."><label>Protect detail</label><input type="range" id="detailw" min="0" max="200" step="5" value="100"><output class="pct" id="detailw_v">100 %</output></div>
+    <div class="row" data-tip="How much the search cares about the amount of support, print height and stability. <b>100 %</b> is balanced; higher prefers poses with fewer, shorter supports even if detail ends up facing down."><label>Fewer supports</label><input type="range" id="supw" min="0" max="200" step="5" value="100"><output class="pct" id="supw_v">100 %</output></div>
+      <div class="row"><button id="orient" class="grow" disabled>Search best orientation</button><button id="sheetBtn" disabled>Compare…</button></div>
+      <table id="cand" hidden><thead><tr><th>#</th><th>score</th><th>height</th><th>tips</th><th title="overhang points that could not be supported">red</th><th title="flat face standing on the plate (mm²)">flat base</th></tr></thead><tbody></tbody></table>
+      <div class="hint">Click a row to use that orientation, or turn the model yourself with <b>Rotate</b> above the view.</div>
+      <div class="row" data-tip="Colours every downward facing surface that needs support red, so you can judge a pose before generating supports."><label class="check"><input type="checkbox" id="showover" checked> Tint overhangs red</label></div>
+    </div>
+  </details>
+
+  <details class="sec" data-sec="supports" open>
+    <summary><span class="num">3</span><h2>Supports</h2><span class="sum" id="sum-supports"></span></summary>
+    <div class="body">
+    <div class="row" data-unit="mm" data-tip="Smallest distance between two contact points. Smaller = more contacts: overhangs hang less between them but there are more marks to clean up."><label>Tip spacing</label><input id="p_tree_spacing" type="number" value="1.3" step="0.1" min="0.4"></div>
+    <div class="row" data-unit="mm" data-tip="Diameter of the very point that touches the model. Smaller = smaller marks but weaker hold; it must still be printable with your nozzle. Find yours with <b>Calibrate support tips</b>."><label>Tip diameter</label><input id="p_tip_diameter" type="number" value="0.48" step="0.02" min="0.1"></div>
+    <div class="row" data-unit="mm" data-tip="How far the support raft under each trunk reaches beyond the trunk's foot. A bigger raft holds better on the plate."><label>Support raft brim</label><input id="p_pad_brim" type="number" value="3.6" step="0.2" min="0"></div>
+    <div class="row" data-unit="°" data-tip="Surfaces that face down more steeply than this (measured from a vertical wall) get supports. 45° is safe for most printers; raise it if your printer handles overhangs well."><label>Overhang angle</label><input id="p_overhang_angle" type="number" value="45" step="1" min="20" max="80"></div>
+    <div class="row" data-tip="The model never touches the plate: it floats on its supports above one support raft that joins all the trunks. Better bed adhesion and no flat, squashed underside on the model."><label class="check"><input type="checkbox" id="p_raft"> No bed contact: model floats on supports</label></div>
+      <details class="more" id="moresup"><summary>More settings</summary>
+    <h4 class="sub">Tips</h4>
+    <div class="row" data-unit="mm" data-tip="How deep the tip reaches into the model so it actually fuses to it. Too little and the tip does not hold; too much leaves pits. Find yours with <b>Calibrate support tips</b>."><label>Tip penetration</label><input id="p_tip_penetration" type="number" value="0.24" step="0.02" min="0"></div>
+    <div class="row" data-unit="°" data-tip="How far from vertical the short head behind a tip may lean to reach a surface at an angle."><label>Max head lean</label><input id="p_max_tilt" type="number" value="25" step="1" min="0" max="45"></div>
+    <div class="row" data-unit="mm" data-tip="A short overhang with a wall or floor this close underneath prints fine on its own (the nozzle bridges it), so it gets no tip. 0 = support everything."><label>Skip lips shorter than</label><input id="p_self_support_reach" type="number" value="0.3" step="0.1" min="0"></div>
+    <h4 class="sub">Branches and trunks</h4>
+    <div class="row" data-unit="mm" data-tip="Diameter of the thinnest branch right behind a tip. Thicker branches are stiffer but leave bigger contact areas when they merge close to the model."><label>Branch diameter</label><input id="p_branch_diameter" type="number" value="0.8" step="0.1" min="0.3"></div>
+    <div class="row" data-unit="°" data-tip="How fast branches get thicker on their way down (degrees, like a cone). Tall supports stand much more stable when they widen towards the plate. 0 = straight cylinders."><label>Cone angle</label><input id="p_taper_angle" type="number" value="4" step="0.5" min="0" max="15"></div>
+    <div class="row" data-unit="mm" data-tip="The thickest a trunk may become, however many branches join it."><label>Thickest trunk</label><input id="p_trunk_max_diameter" type="number" value="10" step="0.5" min="1"></div>
+    <div class="row" data-unit="mm" data-tip="Branches closer than this lean towards each other and join. Bigger = fewer, thicker trunks (less print time); smaller = more separate towers."><label>Merge range</label><input id="p_link_range" type="number" value="12" step="1" min="0"></div>
+    <div class="row" data-unit="°" data-tip="How far from vertical a branch may lean while it travels sideways to join another one. Above about 45° the branches themselves start to overhang."><label>Max branch lean</label><input id="p_branch_angle" type="number" value="40" step="5" min="10" max="45"></div>
+    <div class="row" data-tip="Slanted ties between neighbouring trunks. They keep tall, thin trunks from wobbling while the nozzle works on them."><label class="check"><input type="checkbox" id="p_bracing" checked> Cross-braces between trunks</label></div>
+    <h4 class="sub">Build plate</h4>
+    <div class="row" data-tip="Supports only stand on the build plate, never on the model (like the slicer setting of the same name). Switch it off to let a support stand on an upward facing part of the model as a last resort where nothing reaches the plate; it leaves a mark there."><label class="check"><input type="checkbox" id="plate_only" checked> On build plate only</label></div>
+    <div class="row" data-unit="mm" data-tip="Support rafts closer than this are joined into one, so trunks support each other and do not get knocked loose. 0 = a separate raft under every trunk."><label>Join support rafts closer than</label><input id="p_pad_merge" type="number" value="3.6" step="0.2" min="0"></div>
+    <div class="row" data-tip="A part with a big flat face (a base, the back of a shield, a cut surface) is put with that face down on the plate: no supports and no tip marks there, a shorter print and the best grip. With this on, such parts stand on the plate even with “No bed contact”."><label class="check"><input type="checkbox" id="p_flat_on_plate" checked> Big flat faces stand on the plate</label></div>
+    <div class="row" data-unit="mm²" data-tip="How big a flat face must be (mm²) to count as a base the part can stand on. Smaller faces give too little grip; the part then gets supports."><label>Flat base at least</label><input id="p_flat_min_area" type="number" value="40" step="5" min="5"></div>
+    <div class="row" data-unit="mm" data-tip="No bed contact: gap between the support raft and the lowest point of the model."><label>No bed contact · gap to model</label><input id="p_raft_elevation" type="number" value="3" step="0.5" min="1"></div>
+    <div class="row" data-unit="mm" data-tip="No bed contact: thickness of the support raft that joins all the trunks."><label>No bed contact · raft thickness</label><input id="p_raft_thickness" type="number" value="0.8" step="0.1" min="0.2"></div>
+      </details>
+      <div class="row"><button id="gen" class="grow" disabled>Generate supports</button><button id="clearsup" disabled>Remove</button><label class="check tight" title="Show or hide the supports in the view"><input type="checkbox" id="showsup" checked> show</label></div>
+      <table id="stats" hidden><tbody></tbody></table>
+      <div class="row"><button id="check" class="wide" disabled title="Slices the result virtually and marks anything that would print in mid-air">Check printability</button></div>
+      <div class="info" id="checkinfo"></div>
+      <div class="hint">All sizes are millimetres on the final print; they do not change with the import scale.</div>
+    </div>
+  </details>
+
+  <details class="sec" data-sec="edits">
+    <summary><span class="num">4</span><h2>Hand edits</h2><span class="sum" id="sum-edits"></span></summary>
+    <div class="body">
+      <div class="hint" style="margin-top:0">Pick <b>Add tips</b> or <b>Keep clear</b> above the view, then click or drag on the model. Press “Generate supports” again afterwards.</div>
+      <div class="row" data-unit="mm" data-tip="Size of the keep-clear brush: no automatic tips are placed inside the painted circles."><label>Keep-clear brush radius</label><input id="brush" type="number" value="2" step="0.5" min="0.5"></div>
+      <div class="row"><button id="undo" class="small" disabled title="Ctrl + Z">Undo last</button><button id="clearedits" class="small" disabled>Clear all</button><span class="info" id="editinfo" style="margin:0">no hand edits</span></div>
+    </div>
+  </details>
+
+  <details class="sec" data-sec="plates" open>
+    <summary><span class="num">5</span><h2>Build plates</h2><span class="sum" id="sum-plates"></span></summary>
+    <div class="body">
+    <div class="row" data-tip="Size of your printer's build plate. Pick “Custom size…” to type it in."><label>Printer / plate</label><select id="plate_preset">
+      <option value="256x256" selected>Bambu X1 / P1 / A1 · 256 × 256</option>
+      <option value="180x180">Bambu A1 mini · 180 × 180</option>
+      <option value="350x320">Bambu H2D · 350 × 320</option>
+      <option value="250x210">Prusa MK4 · 250 × 210</option>
+      <option value="250x220">Prusa Core One · 250 × 220</option>
+      <option value="220x220">Ender 3 / generic · 220 × 220</option>
+      <option value="custom">Custom size…</option></select></div>
+    <div class="row" data-unit="mm"><label>Width × depth</label><input id="plate_w" type="number" value="256" step="1" style="width:64px"><input id="plate_d" type="number" value="256" step="1" style="width:64px"></div>
+    <div class="row" data-unit="mm" data-tip="Free space between neighbouring parts (including their supports)."><label>Gap between parts</label><input id="plate_gap" type="number" value="4" step="0.5" min="0"></div>
+    <div class="row" data-unit="mm" data-tip="Nothing is placed closer than this to the edge of the plate."><label>Keep from the plate edge</label><input id="plate_margin" type="number" value="5" step="0.5" min="0"></div>
+    <div class="row" data-tip="Parts may be turned about the vertical axis to fit more on a plate. This never changes how they print."><label class="check"><input type="checkbox" id="plate_turn" checked> Turn parts to pack tighter</label></div>
+      <div class="row"><button id="arrange" class="wide" disabled>Arrange on plates</button></div>
+      <div class="info" id="plateinfo"></div>
+    </div>
+  </details>
+
+  <details class="sec" data-sec="export" open>
+    <summary><span class="num">6</span><h2>Export</h2><span class="sum" id="sum-export"></span></summary>
+    <div class="body">
+      <div class="row"><label>Project name</label><input id="projname" type="text" value="MiniPrint_project" style="width:170px"></div>
+      <div class="row" data-tip="Export the model with all the triangles of the original file instead of the reduced copy MiniPrint worked with. The supports stay as they are."><label class="check"><input type="checkbox" id="fullres"> Model at full original resolution</label></div>
+      <div class="row"><button id="explates" class="primary wide" disabled>Export all plates (3MF)</button></div>
+      <div class="hint">One 3MF per plate with every part in its place (model and supports as two parts of one object); several plates come as a ZIP.</div>
+      <div class="row" style="margin-top:10px"><span class="info" style="margin:0;flex:1">This part only:</span><button id="ex3mf" class="small" disabled>3MF</button><button id="exm" class="small" disabled>model STL</button><button id="exs" class="small" disabled>supports STL</button></div>
+    </div>
+  </details>
+
+  </div>
+</aside>
+
+<main id="main">
+  <canvas id="gl" tabindex="0" aria-label="3D view"></canvas>
+  <div id="busy" hidden></div>
+  <div id="topbar">
+    <div id="toolbar" class="float" role="toolbar" aria-label="View tools">
+      <button data-tool="orbit" class="on" title="Turn the view (drag), pan (Shift + drag or middle button), zoom (wheel)">Orbit<kbd>O</kbd></button>
+      <button data-tool="move" title="Plate view: drag a part to a new place on the plate">Move<kbd>M</kbd></button>
+      <button data-tool="rotate" title="Part view: drag a ring to turn the model. Plate view: drag a part to turn it on the plate">Rotate<kbd>R</kbd></button>
+      <span class="sep"></span>
+      <button data-tool="add" title="Click or drag on the model to force support tips there">Add tips<kbd>A</kbd></button>
+      <button data-tool="erase" title="Paint areas that must not get automatic tips">Keep clear<kbd>K</kbd></button>
+    </div>
+    <div id="viewsw" class="float" role="group" aria-label="What the view shows">
+      <button id="partview" title="Work on one part: orientation, supports, hand edits">Part</button>
+      <button id="plateview" title="See a whole build plate and place parts on it">Plate</button>
+      <select id="plate_show" aria-label="Which plate" hidden></select>
+    </div>
+    <span class="spacer"></span>
+    <details id="legend" class="float" open>
+      <summary>Legend</summary>
+      <div><i style="background:#8fa6e8"></i>model</div><div><i style="background:#e8923a"></i>supports</div><div><i style="background:#ff6b5e"></i>unsupported point</div><div><i style="background:#43d17a"></i>hand-placed tip</div><div><i style="background:#d45cff"></i>slice-check problem</div><div><i style="background:#ff6b5e99;outline:1px solid #ff6b5e"></i>keep-clear zone</div>
+    </details>
+  </div>
+  <div id="viewhint" class="float"></div>
+  <div id="empty">
+    <div class="card">
+      <svg width="46" height="46" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v8l-7 4-7-4V7z" fill="none" stroke="#3ec9b0" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 7l7 4 7-4M12 11v8" fill="none" stroke="#3ec9b0" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      <h2>Drop your STL files here</h2>
+      <p>All parts of a figurine at once is fine. Nothing leaves your computer.</p>
+      <div class="actions"><button id="emptyimport" class="primary">Import models…</button></div>
+      <div class="examples" id="examples" hidden>or try an example:<br></div>
+    </div>
+  </div>
+  <div id="toast" hidden role="alert"><span id="toasttext"></span><button id="toastclose" aria-label="Dismiss">✕</button></div>
+  <div id="logbar" class="float">
+    <pre id="log" aria-label="Log"></pre>
+    <div class="line" id="logtoggle" title="Show or hide the log"><span id="loglast"></span><em id="logmore">log ▴</em></div>
+  </div>
+  <div id="sheet" hidden><button id="sheetClose">Close</button><img id="sheetImg" alt="The orientation candidates side by side"></div>
+</main>
+</div>
+
+<div id="cal" class="modal" hidden>
+  <div class="dlg">
+    <h3>Calibrate support tips</h3>
+    <div class="hint" style="margin-top:0">Every test piece is a small bar floating above the plate on its supports: its <b>flat underside</b> is the 90° test and one end is a <b>45° slope</b>, both supported with one combination of tip diameter and tip penetration. Rows are tip diameters, columns are penetrations; each piece shows its values on top in hundredths of a millimetre (<b>t48</b> = 0.48 mm tip, <b>P20</b> = 0.20 mm penetration). Everything else uses your current support settings — set them up as you usually print first.</div>
+    <div class="row" data-unit="mm" data-tip="Diameters of the very point that touches the model, in mm, separated by commas (up to 8). Smaller tips leave smaller marks but hold less."><label>Tip diameters</label><input id="cal_tips" type="text" value="0.36, 0.40, 0.44, 0.48, 0.52, 0.56, 0.60" style="width:170px"></div>
+    <div class="row" data-unit="mm" data-tip="How deep the tip reaches into the model, in mm, separated by commas (up to 8). Too little and the tips do not fuse; too much leaves pits."><label>Tip penetrations</label><input id="cal_pens" type="text" value="0.1, 0.2, 0.3, 0.4" style="width:170px"></div>
+    <div class="row" data-unit="mm" data-tip="How high the underside of every piece floats above the plate (mm). With “No bed contact” this is the gap between the support raft and the piece."><label>Height above plate</label><input id="cal_height" type="number" value="5" step="1" min="2" max="30" style="width:170px"></div>
+    <div class="hint" id="calest"></div>
+    <div class="hint"><b>After printing</b>, look at each piece: did all tips hold while printing (no sagging or loose strands under the flat underside)? Do the supports snap off cleanly? How big are the marks on the slope and on the underside? Take the tip diameter and penetration of the best piece, enter them in <i>Supports</i> (<i>Tip penetration</i> is under <i>More settings</i>) and save them in a profile.</div>
+    <div class="actions"><button id="calcancel">Cancel</button><button id="calgo" class="primary">Add to project</button></div>
+  </div>
+</div>
+<div id="imp" class="modal" hidden>
+  <div class="dlg">
+    <h3>Import models</h3>
+    <div id="impdrop">Drop STL files here<br>or <button id="impchoose" class="small">Choose files…</button><input id="file" type="file" accept=".stl" multiple hidden></div>
+    <ul id="implist"></ul>
+    <div class="row" data-tip="Print size compared with the file. 100 % prints it as it is; 120 % makes a 28 mm figure about 34 mm. All support sizes are in final-print millimetres, so they do not scale along."><label>Scale</label><input type="range" id="imp_scale_r" min="10" max="400" step="5" value="100"><input type="number" id="imp_scale" value="100" min="1" max="2000" step="1" style="width:64px"><span>%</span></div>
+    <div class="row" data-tip="Share of the file's triangles MiniPrint keeps. 100 % keeps everything (slowest). Sculpted miniatures often have far more triangles than an FDM printer can show; 20–40 % is usually invisible on the print and makes orientation and supports much faster. The shape stays watertight either way."><label>Keep triangles</label><input type="range" id="imp_detail" min="5" max="100" step="5" value="100"><output class="pct" id="imp_detail_v">100 %</output></div>
+    <div class="hint" id="impest">Choose one or more STL files.</div>
+    <div class="actions"><button id="impcancel">Cancel</button><button id="impgo" class="primary" disabled>Import</button></div>
+  </div>
+</div>
+<div id="help" class="modal" hidden>
+  <div class="dlg">
+    <h3>How MiniPrint works</h3>
+    <ol>
+      <li><b>Import</b> the STL files of your figurine (all parts at once is fine).</li>
+      <li><b>Orient + support all parts</b> finds a pose for every part, grows supports and puts the parts on build plates.</li>
+      <li>Click a part to <b>check and adjust</b> it: another orientation, other settings, tips added or kept away by hand.</li>
+      <li><b>Export all plates</b> and open the 3MF in your slicer.</li>
+    </ol>
+    <dl>
+      <dt>Drag</dt><dd>turn the view</dd>
+      <dt><kbd>Shift</kbd> + drag, middle button</dt><dd>pan</dd>
+      <dt>Wheel</dt><dd>zoom</dd>
+      <dt><kbd>O</kbd> <kbd>M</kbd> <kbd>R</kbd> <kbd>A</kbd> <kbd>K</kbd></dt><dd>Orbit, Move, Rotate, Add tips, Keep clear</dd>
+      <dt><kbd>Ctrl</kbd> + <kbd>Z</kbd></dt><dd>undo the last hand edit</dd>
+      <dt><kbd>Esc</kbd></dt><dd>back to Orbit; closes a window</dd>
+    </dl>
+    <div class="hint">Hover over the name of a setting for an explanation. MiniPrint runs on your own computer; nothing is uploaded.</div>
+    <div class="actions"><button id="helpclose" class="primary">Close</button></div>
+  </div>
+</div>
+<div id="dropveil"></div>
+<div id="tip" hidden></div>
+<script type="module" src="/web/main.js"></script>
+</body>
+</html>

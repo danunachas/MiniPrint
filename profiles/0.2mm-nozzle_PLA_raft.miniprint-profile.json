@@ -1,0 +1,32 @@
+{
+ "app": "MiniPrint",
+ "kind": "settings-profile",
+ "format": 1,
+ "version": "0.2.0",
+ "name": "0.2 mm nozzle - PLA - raft (no bed contact)",
+ "description": "Like the defaults, but the model floats 3 mm above one raft plate (parts with a big flat face still stand on it).",
+ "values": {
+  "p_tree_spacing": "1.3",
+  "p_branch_diameter": "0.8",
+  "p_taper_angle": "4",
+  "p_trunk_max_diameter": "10",
+  "p_link_range": "12",
+  "p_branch_angle": "40",
+  "p_bracing": true,
+  "p_raft": true,
+  "p_flat_on_plate": true,
+  "p_raft_elevation": "3",
+  "p_raft_thickness": "0.8",
+  "p_flat_min_area": "40",
+  "p_self_support_reach": "0.3",
+  "p_tip_diameter": "0.48",
+  "p_tip_penetration": "0.24",
+  "p_overhang_angle": "45",
+  "p_max_tilt": "25",
+  "p_pad_brim": "3.6",
+  "p_pad_merge": "3.6",
+  "detailw": "100",
+  "supw": "100",
+  "plate_only": true
+ }
+}

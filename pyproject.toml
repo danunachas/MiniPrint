@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "miniprint"
+description = "Print preparation for miniatures on FDM printers: orientation, tree supports, build plates, 3MF export"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.10", "Pillow>=9"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.5"]
+
+[project.scripts]
+miniprint = "miniprint.cli:main"
+miniprint-gui = "miniprint.gui.server:main"
+
+[project.urls]
+Homepage = "https://github.com/OWNER/MiniPrint"
+
+[tool.setuptools]
+packages = ["miniprint", "miniprint.gui"]
+
+[tool.setuptools.package-data]
+miniprint = ["web/*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "miniprint.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["runtime", "output"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+ignore = [
+    "E741",    # short names (l, I, O): this is geometry code - V, F, R, P are the vocabulary
+    "RUF001", "RUF002", "RUF003",   # typographic characters in strings and comments are on purpose (° × – “ ”)
+    "B023",    # closures over loop variables are used deliberately in a few tight loops
+    "RUF005",  # [a] + b reads fine
+    "RUF046",  # int(round(x)): x is often a numpy float, whose round() is not an int
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
