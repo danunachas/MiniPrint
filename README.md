@@ -7,14 +7,17 @@ reads 3MF or STL works).
 
 Everything runs on your own computer. The app opens in your web browser, but nothing is uploaded anywhere.
 
+**[⬇ Download for Windows](https://github.com/danunachas/MiniPrint/releases/latest/download/MiniPrint-windows-x64.zip)** – unzip, double-click `MiniPrint.exe`, done. No installation, no account.
+Linux / macOS: [Docker](#docker-linux-macos-home-server) or [Python](#any-system-with-python).
+
 ![Tree supports on a test model](docs/supports.png)
 
 ## Download and start
 
 ### Windows (no installation)
 
-1. Download `MiniPrint-…-windows-x64.zip` from the [Releases](../../releases) page and unzip it anywhere
-   (Desktop, Documents, a USB stick…).
+1. Download [`MiniPrint-windows-x64.zip`](https://github.com/danunachas/MiniPrint/releases/latest/download/MiniPrint-windows-x64.zip)
+   (also on the [Releases](../../releases) page) and unzip it anywhere (Desktop, Documents, a USB stick…).
 2. Double-click **`MiniPrint.exe`**. A small console window opens and MiniPrint appears in your browser. Closing
    the console window stops MiniPrint.
 
@@ -24,7 +27,7 @@ own Python runtime (about 60 MB, once) into the `runtime` folder next to it.
 
 ### Docker (Linux, macOS, home server)
 
-    docker run -d --name miniprint -p 127.0.0.1:8765:8765 -v miniprint-data:/data ghcr.io/OWNER/miniprint
+    docker run -d --name miniprint -p 127.0.0.1:8765:8765 -v miniprint-data:/data ghcr.io/danunachas/miniprint
 
 then open <http://127.0.0.1:8765/>. Details, `docker compose` and use from other devices:
 [docs/docker.md](docs/docker.md).

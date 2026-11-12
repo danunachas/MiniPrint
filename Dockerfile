@@ -1,4 +1,4 @@
-# MiniPrint in a container:  docker run --rm -p 127.0.0.1:8765:8765 -v miniprint-data:/data ghcr.io/OWNER/miniprint
+# MiniPrint in a container:  docker run --rm -p 127.0.0.1:8765:8765 -v miniprint-data:/data ghcr.io/danunachas/miniprint
 # then open http://127.0.0.1:8765/ .  See docs/docker.md.
 FROM python:3.12-slim
 

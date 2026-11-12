@@ -5,7 +5,7 @@ ready-made `MiniPrint.exe` download is simpler.
 
 ## Run
 
-    docker run -d --name miniprint -p 127.0.0.1:8765:8765 -v miniprint-data:/data ghcr.io/OWNER/miniprint
+    docker run -d --name miniprint -p 127.0.0.1:8765:8765 -v miniprint-data:/data ghcr.io/danunachas/miniprint
 
 then open <http://127.0.0.1:8765/>. Or with the `docker-compose.yml` from this repository:
 
@@ -17,7 +17,7 @@ To build the image yourself: `docker build -t miniprint .` in the repository fol
 * **Your settings** (profiles) are kept in the volume `miniprint-data` (`/data` in the container).
 * **Models** are not stored: you import STL files in the browser and download the 3MF files there, as usual.
   The project is in memory - it is gone when the container restarts.
-* **Updates:** `docker pull ghcr.io/OWNER/miniprint && docker compose up -d` (or re-run `docker run`).
+* **Updates:** `docker pull ghcr.io/danunachas/miniprint && docker compose up -d` (or re-run `docker run`).
 
 ## Using it from other devices
 
@@ -41,7 +41,7 @@ your own domain), list it: `-e MINIPRINT_HOSTS=miniprint.example.org`.
 
 ## Command line in the container
 
-    docker run --rm -v "$PWD:/work" -w /work ghcr.io/OWNER/miniprint python -m miniprint model.stl -o out
+    docker run --rm -v "$PWD:/work" -w /work ghcr.io/danunachas/miniprint python -m miniprint model.stl -o out
 
 Orientation search and supports are CPU work; give the container several cores and at least 4 GB of memory
 for large sculpts.

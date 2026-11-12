@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# MiniPrint's own files (personal settings, results, the downloaded runtime)
+presets.json
+presets.json.*
+output/
+runtime/
+runtime.new/
+*.tmp
+
+# Builds
+dist/
+build/
+*.zip
+
+# Never commit models you do not have the right to share
+*.stl
+*.3mf
+!examples/*.stl
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+MiniPrint.exe

@@ -19,7 +19,7 @@ miniprint = "miniprint.cli:main"
 miniprint-gui = "miniprint.gui.server:main"
 
 [project.urls]
-Homepage = "https://github.com/OWNER/MiniPrint"
+Homepage = "https://github.com/danunachas/MiniPrint"
 
 [tool.setuptools]
 packages = ["miniprint", "miniprint.gui"]

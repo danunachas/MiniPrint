@@ -13,7 +13,7 @@ Thanks for helping! Bug reports, print results, settings profiles and code are a
 MiniPrint is plain Python (numpy, scipy, Pillow) plus a browser page without frameworks or a build step.
 [docs/architecture.md](docs/architecture.md) explains what is where and has recipes for common changes.
 
-    git clone https://github.com/OWNER/MiniPrint && cd MiniPrint
+    git clone https://github.com/danunachas/MiniPrint && cd MiniPrint
     python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
     python -m pip install -e ".[dev]"
 

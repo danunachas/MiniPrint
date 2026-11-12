@@ -1,7 +1,7 @@
 # docker compose up -d   ->  http://127.0.0.1:8765/
 services:
   miniprint:
-    image: ghcr.io/OWNER/miniprint:latest     # or build it yourself:  docker compose up -d --build
+    image: ghcr.io/danunachas/miniprint:latest     # or build it yourself:  docker compose up -d --build
     build: .
     ports:
       # only this computer can reach MiniPrint. It has no password: write "8765:8765" to open it to your

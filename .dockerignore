@@ -1,0 +1,23 @@
+# everything the image does not need
+.git
+.github
+.ruff_cache
+.pytest_cache
+**/__pycache__
+*.pyc
+docs
+tests
+tools
+launcher
+runtime
+output
+dist
+build
+presets.json*
+MiniPrint.exe
+MiniPrint.pyw
+*.bat
+*.zip
+*.3mf
+*.stl
+!examples/*.stl

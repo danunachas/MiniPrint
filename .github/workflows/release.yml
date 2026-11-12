@@ -1,0 +1,72 @@
+# Builds the ready-to-run Windows download: MiniPrint.exe + MiniPrint + its own Python runtime (no installation,
+# no internet needed on first start) and attaches it to the GitHub release.
+name: windows build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PY_EMBED: "3.12.10"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build MiniPrint.exe
+        working-directory: launcher
+        run: go build -trimpath -ldflags "-s -w" -o ..\MiniPrint.exe .
+
+      - name: Assemble the bundle
+        shell: pwsh
+        run: |
+          $out = "dist\MiniPrint"
+          New-Item -ItemType Directory -Force "$out\runtime" | Out-Null
+          Invoke-WebRequest "https://www.python.org/ftp/python/$env:PY_EMBED/python-$env:PY_EMBED-embed-amd64.zip" -OutFile py.zip
+          Expand-Archive py.zip -DestinationPath "$out\runtime"
+          "python312.zip`r`n.`r`nLib\site-packages`r`n..`r`nimport site`r`n" | Set-Content -NoNewline "$out\runtime\python312._pth"
+          python -m pip install --only-binary=:all: --target "$out\runtime\Lib\site-packages" -r requirements.txt
+          Copy-Item -Recurse miniprint, profiles, examples, docs "$out\"
+          Copy-Item MiniPrint.exe, MiniPrint.pyw, README.md, LICENSE, CHANGELOG.md, requirements.txt, run_gui.bat, run_miniprint.bat "$out\"
+          "python=$env:PY_EMBED`r`nbundled=release`r`n" | Set-Content -NoNewline "$out\runtime\.ready"
+          Get-ChildItem -Recurse -Directory -Filter __pycache__ $out | Remove-Item -Recurse -Force
+
+      - name: Test the bundle with its own runtime
+        working-directory: dist\MiniPrint
+        shell: pwsh
+        run: |
+          runtime\python.exe -c "import numpy, scipy.spatial, PIL, miniprint.gui.http; print('imports ok')"
+          runtime\python.exe -m miniprint examples\shield.stl -o smoke-test
+          Remove-Item -Recurse -Force smoke-test
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          # always the same name, so .../releases/latest/download/MiniPrint-windows-x64.zip (the link in the
+          # README) points to the newest version
+          Compress-Archive -Path dist\MiniPrint -DestinationPath "MiniPrint-windows-x64.zip"
+          "ZIP=MiniPrint-windows-x64.zip" | Out-File -Append $env:GITHUB_ENV
+
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ env.ZIP }}" --clobber
+
+      - name: Keep as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniPrint-windows-x64
+          path: ${{ env.ZIP }}
