@@ -100,6 +100,19 @@ const isStl = f => /\.stl$/i.test(f.name);
 // a binary STL is 84 bytes + 50 per triangle; a text STL is roughly five times bigger per triangle
 const triangles = f => (f.size > 84 && (f.size - 84) % 50 === 0) ? (f.size - 84) / 50 : Math.round(f.size / 250);
 
+// Big sculpts are lowered to about this many triangles per part unless the user chooses otherwise: far
+// beyond it an FDM print shows no difference, while orientation and supports get slow and memory-hungry.
+const COMFORTABLE = 500000;
+let keepTouched = false;                              // the user moved the slider in this import window
+let autoKeep = 0;                                     // % MiniPrint chose for this import (0 = none)
+function suggestKeep() {
+  if (keepTouched || !pending.length) return;
+  const biggest = Math.max(...pending.map(triangles));
+  if (biggest * pct("imp_detail") <= COMFORTABLE * 1.6) return;
+  autoKeep = Math.max(5, Math.floor(COMFORTABLE / biggest * 100 / 5) * 5);
+  $("imp_detail").value = autoKeep;
+}
+
 function renderImport() {
   $("implist").innerHTML = pending.map(f => `<li><span>${esc(f.name)}</span><span>${(f.size / 1048576).toFixed(1)} MB · ≈${triangles(f).toLocaleString()} triangles</span></li>`).join("");
   $("impgo").disabled = !pending.length;
@@ -107,19 +120,24 @@ function renderImport() {
   if (!pending.length) { $("impest").textContent = "Choose one or more STL files."; return; }
   const keep = pct("imp_detail"), total = pending.reduce((a, f) => a + triangles(f), 0);
   let t = `${pending.length} file(s), about ${Math.round(total * keep).toLocaleString()} triangles to work with` + (keep < 1 ? ` (of ${total.toLocaleString()})` : "") + ".";
-  if (Math.max(...pending.map(triangles)) * keep > 500000) t += " The biggest part keeps over 500k triangles: orientation and supports will be slow — 20–40 % is usually invisible on an FDM print.";
+  const biggest = Math.max(...pending.map(triangles));
+  if (autoKeep && +$("imp_detail").value === autoKeep) t += ` The biggest part has ${(biggest / 1e6).toFixed(1)} million triangles, more than an FDM print can show, so “Keep triangles” was lowered to ${autoKeep} % to keep MiniPrint fast. For the export you can still use the full original (see “Export”).`;
+  else if (biggest * keep > COMFORTABLE) t += ` The biggest part keeps about ${Math.round(biggest * keep / 1000).toLocaleString()}k triangles: orientation and supports will be slow and need a lot of memory — 20–40 % is usually invisible on an FDM print.`;
   $("impest").textContent = t;
 }
 function openImport(files) {
   if (st.busy) return;
   pending = [...(files || [])].filter(isStl);
+  keepTouched = false; autoKeep = 0;
   $("imp").hidden = false;
+  suggestKeep();
   renderImport();
 }
 function addPending(files) {
   const stl = [...files].filter(isStl);
   if (stl.length < files.length) fail("Only .stl files can be imported.");
   pending = pending.concat(stl.filter(f => !pending.some(p => p.name === f.name && p.size === f.size)));
+  suggestKeep();
   renderImport();
 }
 
@@ -252,7 +270,7 @@ export async function initParts() {
   $("impgo").onclick = () => { const files = pending; pending = []; $("imp").hidden = true; importFiles(files); };
   $("imp_scale_r").oninput = () => { $("imp_scale").value = $("imp_scale_r").value; $("imp_scale").dispatchEvent(new Event("change")); };
   $("imp_scale").addEventListener("input", () => { $("imp_scale_r").value = Math.max(10, Math.min(400, +$("imp_scale").value || 100)); });
-  $("imp_detail").addEventListener("input", renderImport);
+  $("imp_detail").addEventListener("input", () => { keepTouched = true; renderImport(); });
 
   // files can be dropped anywhere on the page
   let depth = 0;

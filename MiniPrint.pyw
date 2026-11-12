@@ -58,7 +58,10 @@ def main():
     if not _ensure_packages():
         return
     from http.server import ThreadingHTTPServer
+
+    from miniprint.gui import logfile
     from miniprint.gui.http import Handler
+    logfile.open_log()                    # no console here: miniprint.log is the only record of problems
     try:
         srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     except Exception as e:

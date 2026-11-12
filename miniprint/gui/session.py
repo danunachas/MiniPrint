@@ -20,6 +20,7 @@ from ..anchor import anchor_cube
 from ..geometry import merge, rotation_matrix, signed_volume
 from ..plate import rot2
 from ..supports import SupportParams
+from . import logfile
 
 
 def params_from(cls, values):
@@ -330,12 +331,22 @@ class Session:
         job = Job()
         self.jobs[jid] = job
 
+        def log(*a):
+            line = " ".join(str(x) for x in a)
+            job.log.append(line)
+            logfile.write(line)
+
         def run():
             try:
-                job.result = fn(lambda *a: job.log.append(" ".join(str(x) for x in a)))
+                job.result = fn(log)
+            except MemoryError:
+                job.error = ("Not enough memory for this part. Import it again with fewer triangles "
+                             "(“Keep triangles” 20–40 % is usually invisible on an FDM print).")
+                logfile.write("job failed: out of memory")
             except Exception as ex:                     # shown in the page's log
                 job.error = f"{type(ex).__name__}: {ex}"
                 job.log.append(traceback.format_exc())
+                logfile.write(traceback.format_exc())
             job.done = True
 
         threading.Thread(target=run, daemon=True).start()

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1
+
+* `MiniPrint.exe` no longer silently hands over to another copy that is already running (an older version, or
+  one started from another folder or with `MiniPrint.pyw`): it says so and how to close it.
+* `miniprint.log` next to the program records what the console shows, every job and any error or crash, so a
+  problem can be looked into even when MiniPrint ran without a window.
+* Very big sculpts: the import window lowers *Keep triangles* so the biggest part keeps about 500k triangles
+  (an FDM print shows no difference; orientation and supports stay fast). Move the slider to override; the
+  export can still use the full original. Running out of memory is reported as such.
+
 ## 0.3.0
 
 * Supports flow from the tips to the plate: branches widen into the trunk they join and trunks into their

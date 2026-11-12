@@ -39,3 +39,15 @@ func TestUnzipRejectsEscapes(t *testing.T) {
 		t.Fatal("zip slip not caught")
 	}
 }
+
+func TestOurVersion(t *testing.T) {
+	d := t.TempDir()
+	os.MkdirAll(filepath.Join(d, "miniprint"), 0o755)
+	os.WriteFile(filepath.Join(d, "miniprint", "__init__.py"), []byte("\"\"\"doc\"\"\"\n__version__ = \"0.3.1\"\n"), 0o644)
+	if v := ourVersion(d); v != "0.3.1" {
+		t.Fatal(v)
+	}
+	if v := ourVersion(t.TempDir()); v != "?" {
+		t.Fatal(v)
+	}
+}

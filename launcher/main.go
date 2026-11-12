@@ -63,9 +63,7 @@ func main() {
 		}
 	}
 	if portBusy() {
-		fmt.Println("MiniPrint is already running - opening it in your browser.")
-		openBrowser(appURL)
-		time.Sleep(2 * time.Second)
+		alreadyRunning(root)
 		return
 	}
 	py := filepath.Join(rt, "python.exe")
@@ -324,6 +322,79 @@ func portBusy() bool {
 	}
 	c.Close()
 	return true
+}
+
+// alreadyRunning: something answers on MiniPrint's port. If it is this very MiniPrint, just open the page; if
+// it is another copy (an older version, or one started from another folder or with MiniPrint.pyw, which has no
+// window), say so plainly - otherwise the user works in that other copy without knowing it.
+func alreadyRunning(root string) {
+	mine := ourVersion(root)
+	running := runningVersion()
+	if running != "" && running == mine {
+		fmt.Println("MiniPrint is already running - opening it in your browser.")
+		openBrowser(appURL)
+		time.Sleep(2 * time.Second)
+		return
+	}
+	what := "another program"
+	if running != "" {
+		what = "MiniPrint " + running
+	} else if portAnswersHTTP() {
+		what = "an older MiniPrint"
+	}
+	fmt.Println()
+	fmt.Printf("  %s is already running on this computer (port %d), so this MiniPrint %s cannot start.\n", what, port, mine)
+	fmt.Println("  It may have been started from another folder, or with MiniPrint.pyw, which has no window.")
+	fmt.Println()
+	fmt.Println("  To use this version: close the other one - its window, or in the Task Manager end")
+	fmt.Println("  \"python\" / \"pythonw\" - and start MiniPrint.exe again.")
+	fmt.Println()
+	fmt.Println("Press Enter to close this window.")
+	fmt.Scanln()
+}
+
+// ourVersion: __version__ from miniprint/__init__.py next to the program.
+func ourVersion(root string) string {
+	b, err := os.ReadFile(filepath.Join(root, "miniprint", "__init__.py"))
+	if err != nil {
+		return "?"
+	}
+	for _, line := range strings.Split(string(b), "\n") {
+		if strings.HasPrefix(line, "__version__") {
+			if i, j := strings.Index(line, "\""), strings.LastIndex(line, "\""); i >= 0 && j > i {
+				return line[i+1 : j]
+			}
+		}
+	}
+	return "?"
+}
+
+// runningVersion: the version the MiniPrint on the port reports ("" if it does not answer /api/health,
+// which MiniPrint before 0.3.0 did not have).
+func runningVersion() string {
+	c := &http.Client{Timeout: 2 * time.Second}
+	resp, err := c.Get(appURL + "api/health")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	var h struct {
+		Version string `json:"version"`
+	}
+	if resp.StatusCode != 200 || json.NewDecoder(resp.Body).Decode(&h) != nil {
+		return ""
+	}
+	return h.Version
+}
+
+func portAnswersHTTP() bool {
+	c := &http.Client{Timeout: 2 * time.Second}
+	resp, err := c.Get(appURL + "api/info")
+	if err != nil {
+		return false
+	}
+	resp.Body.Close()
+	return resp.StatusCode == 200
 }
 
 func fileExists(p string) bool {

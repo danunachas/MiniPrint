@@ -14,6 +14,7 @@ output
 dist
 build
 presets.json*
+miniprint.log*
 MiniPrint.exe
 MiniPrint.pyw
 *.bat

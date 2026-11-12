@@ -1,6 +1,7 @@
 """The GUI server, driven over HTTP exactly like the page does (no browser needed)."""
 import io
 import json
+import time
 import zipfile
 
 import numpy as np
@@ -144,3 +145,32 @@ def test_which_host_names_are_answered(monkeypatch):
     assert not host_allowed("evil.example", False)
     monkeypatch.setenv("MINIPRINT_HOSTS", "miniprint.example.org, other.example")
     assert host_allowed("miniprint.example.org", False) and not host_allowed("evil.example", False)
+
+
+def test_log_file_keeps_job_output_and_errors(tmp_path, monkeypatch):
+    """Without a console window (MiniPrint.pyw) the log file is the only record of what went wrong."""
+    import faulthandler
+
+    from miniprint.gui import logfile
+    from miniprint.gui.session import Session
+    monkeypatch.setenv("MINIPRINT_DATA", str(tmp_path))
+    monkeypatch.setattr(logfile, "_fh", None)
+    assert logfile.open_log() == str(tmp_path / "miniprint.log")
+    try:
+        s = Session()
+
+        def fails(log):
+            log("step one done")
+            raise ValueError("broken mesh")
+        job = s.jobs[s.start(fails)]
+        for _ in range(200):
+            if job.done:
+                break
+            time.sleep(0.01)
+        assert job.error == "ValueError: broken mesh"
+        text = (tmp_path / "miniprint.log").read_text(encoding="utf-8")
+        assert "step one done" in text and "ValueError: broken mesh" in text
+    finally:
+        faulthandler.disable()
+        logfile._fh.close()
+        logfile._fh = None
