@@ -1,9 +1,6 @@
 # MiniPrint
 
-**Free, open-source print preparation for miniatures and figurines on FDM printers.** Import the STL files of a
-figurine and MiniPrint turns every part the best way up, grows root-like supports that touch the model only
-with small, resin-style tips, arranges everything on your build plates and exports ready-to-slice 3MF files.
-
+**Free, open-source support generation for printing highly detailed models on FDM 3D printers.** Import the STL files of your model and MiniPrint finds the best orientation to best preserve detail and minimize support usage, generates organic tree supports ending in small, resin-style tips. For bigger projects there is an auto-arrange feature with customizable build plate size. To reduce print time, there is an option to export the model and supports as separate objects, allowing the use of mixed layer heights (e.g. 0.06mm for the model and 0.12mm for supports).
 **[⬇ Download for Windows](https://github.com/danunachas/MiniPrint/releases/latest/download/MiniPrint-windows-x64.zip)** · [Docker and other systems](#installation) · runs on your own computer,
 nothing is uploaded
 
@@ -30,7 +27,7 @@ nothing is uploaded
 * **Shareable settings profiles** for printers, nozzles and filaments.
 * **Free and open source (GPL-3.0)**: Windows download, Docker, Python on any system, and a command line.
 
-## Who it is for
+## Who is it for
 
 * **Tabletop miniatures (28–32 mm) on a fine nozzle** (e.g. 0.2 mm), where you want resin-like detail and
   small, clean support marks instead of a slicer's coarse supports.
@@ -50,17 +47,15 @@ slicer that reads 3MF or STL works.
 
 ### Workflow
 
-1. **Import models…** – choose or drop all STL files of your figurine at once (or try one of the examples on the
+1. **Import models…** – choose or drop all STL files of your model at once (or try one of the examples on the
    start screen). In the import window set
    * **Scale** (100 % = as in the file; 120 % makes a 28 mm figure about 34 mm),
-   * **Keep triangles** – sculpts often have far more triangles than an FDM print can show; 20–40 % is usually
-     invisible on the print and makes everything much faster. Very big files are lowered automatically to about
+   * **Keep triangles** – sculpts often have far more triangles than an FDM 3D print can show. This option is included to speed up slicer handling of multiple highly detailed models. Very big files are lowered automatically to about
      500k triangles per part. The mesh stays watertight either way.
 2. **Orient + support all parts** – first every part gets its best orientation, then supports; each part is
    put on a build plate as soon as its supports are done. The page stays usable meanwhile: the dot in the parts
    list shows where each part is (grey = waiting, orange = being worked on, **blue = ready** – oriented, you
-   can open it and work on its supports now, green = done). A part you open and change while the batch runs is
-   left to you.
+   can open it and work on its supports now, green = done).
 3. **Check and adjust** – click a part in the list to work on it alone:
    * pick another orientation from the table (*Compare…* shows them side by side), or turn it yourself with the
      **Rotate** tool (drag a ring: red X, green Y, blue Z; 5° steps),
